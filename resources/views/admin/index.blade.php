@@ -32,14 +32,15 @@
 </style>
 
 <h1>Добро пожаловать в админ-панель, @auth{{ Auth::user()->name }}@endauth!</h1>
-
-<a href="">Добавить товар</a>
+<a href="{{ route('product.create') }}">Добавить товар</a>
 <table>
     <thead>
         <tr>
             <th>ID</th>
+            <th>Фото</th>
             <th>Название</th>
             <th>Категория</th>
+            <th>Цена</th>
             <th>Действия</th>
         </tr>
     </thead>
@@ -47,11 +48,13 @@
         @foreach($products as $product)
             <tr>
                 <td>{{ $product->id }}</td>
+                <td><img style="max-width: 128px" src="{{ $product->main_image }}" alt="Фото {{ $product->name }}"></td>
                 <td>{{ $product->name }}</td>
                 <td>{{ $product->category->name }}</td>
+                <td>{{ $product->price }} руб.</td>
                 <td>
-                    <a href="{{ route('products.edit', $product->id) }}">Редактировать</a>
-                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;">
+                    <a href="{{ route('product.edit', $product->id) }}">Редактировать</a>
+                    <form action="{{ route('product.destroy', $product->id) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('DELETE')
                         <button type="submit">Удалить</button>

@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [ProductController::class, 'index'])->name('product');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -17,9 +15,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
-    Route::resource('/admin', ProductController::class);
-});
-
-Route::get('/lab2', function () {
-    return view('labs/lab2');
+    Route::get('/admin', [ProductController::class, 'adminIndex'])->name('admin');
+    Route::resource('/product', ProductController::class);
 });

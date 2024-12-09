@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Nette\Utils\Image;
 
 class ProductController extends Controller
 {
@@ -20,7 +22,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('category')->paginate(10);
-        return view('product.index', compact('products'));
+        return view('products.index', compact('products'));
     }
 
     /**
@@ -28,8 +30,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        // $categories = Category::all();
-        // return view('products.create', compact('categories'));
+        $categories = Category::all();
+        return view('products.create', compact('categories'));
     }
 
     /**
@@ -37,43 +39,60 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // $request->validate([
-        //     'name' => 'required|string|max:255',
-        //     'description' => 'required',
-        //     'main_image' => 'required|image',
-        //     'gallery_images.*' => 'image',
-        //     'category_id' => 'required|exists:categories,id',
-        // ]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required',
+            'price' => 'required|numeric',
+            'main_image' => 'required|image',
+            'gallery_images.*' => 'image',
+            'category_id' => 'required|exists:categories,id',
+        ]);
 
-        // // Загрузка основного изображения
-        // $mainImagePath = $request->file('main_image')->store('images', 'public');
+        $mainImagePath = $this->processImage($request->file('main_image'));
 
-        // // Загрузка галереи
-        // $galleryImages = [];
-        // if ($request->hasFile('gallery_images')) {
-        //     foreach ($request->file('gallery_images') as $image) {
-        //         $galleryImages[] = $image->store('images', 'public');
-        //     }
-        // }
+        $product = Product::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'main_image' => $mainImagePath,
+            'category_id' => $request->category_id,
+        ]);
 
-        // Product::create([
-        //     'name' => $request->name,
-        //     'description' => $request->description,
-        //     'main_image' => $mainImagePath,
-        //     'gallery_images' => json_encode($galleryImages),
-        //     'category_id' => $request->category_id,
-        // ]);
+        if ($request->hasFile('gallery_images')) {
+            $galleryPaths = [];
+            foreach ($request->file('gallery_images') as $image) {
+                $galleryPaths[] = $this->processImage($image);
+            }
+            $product->update(['gallery_images' => json_encode($galleryPaths)]);
+        }
 
-        // return redirect()->route('products.index')->with('success', 'Товар добавлен!');
+        return redirect()->route('admin')->with('success', 'Товар дsобавлен!');
     }
 
+    private function processImage($image)
+    {
+        $relativePath = $image->store('images', 'public');
+        $fullPath = storage_path('app/public/' . $relativePath);
+
+        $img = Image::fromFile($fullPath);
+
+        $img->resize(960, 960, Image::Cover);
+        $watermark = Image::fromFile(public_path('watermark.png'));
+        $img->place($watermark, 0, 0, 100); // Смещение на 10px, прозрачность 50%
+
+        $img->save($fullPath, 80);
+
+        return 'storage/' . $relativePath;
+    }
     /**
      * Display the specified resource.
      */
     public function show(Product $product)
     {
-        //
+        $product->load('category');
+        return view('products.show', compact('product'));
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -129,13 +148,13 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        // Storage::disk('public')->delete($product->main_image);
-        // foreach (json_decode($product->gallery_images) as $image) {
-        //     Storage::disk('public')->delete($image);
-        // }
+        Storage::disk('public')->delete($product->main_image);
+        foreach (json_decode($product->gallery_images) as $image) {
+            Storage::disk('public')->delete($image);
+        }
 
-        // $product->delete();
+        $product->delete();
 
-        // return redirect()->route('products.index')->with('success', 'Товар удален!');
+        return redirect()->route('admin')->with('success', 'Товар удален!');
     }
 }
