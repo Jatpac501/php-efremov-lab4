@@ -1,9 +1,16 @@
+@extends('layouts.app')
+
+@section('title', 'Регистрация')
+
+@push('styles')
 <style>
-    form {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+    .registration {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 160px);
+    }
+    .registration__form {
         width: 300px;
         margin: 0 auto;
         padding: 20px;
@@ -11,46 +18,73 @@
         border-radius: 5px;
         background-color: #f9f9f9;
     }
-    label {
+    .registration__label {
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
     }
-    input {
+    .registration__input {
         width: 100%;
         padding: 10px;
         margin-bottom: 10px;
         border: 1px solid #ddd;
         border-radius: 3px;
+        box-sizing: border-box;
     }
-    button {
+    .registration__button {
         width: 100%;
         padding: 10px;
-        background-color: #f44336;
+        background-color: #4CAF50;
         color: white;
         border: none;
         border-radius: 3px;
         cursor: pointer;
     }
+    .registration__error-message {
+        color: red;
+        margin-bottom: 10px;
+    }
+    .registration__error-list {
+        padding-left: 20px;
+    }
 </style>
+@endpush
 
-<form action="{{ route('register') }}" method="POST">
-    @csrf
-    <div>
-        <label>Логин</label>
-        <input type="text" name="name" required>
-    </div>
-    <div>
-        <label>Почта</label>
-        <input type="email" name="email" required>
-    </div>
-    <div>
-        <label>Пароль</label>
-        <input type="password" name="password" required>
-    </div>
-    <div>
-        <label>Подтверждение пароля</label>
-        <input type="password" name="password_pass" required>
-    </div>
-    <button type="submit">Войти</button>
-</form>
+@section('content')
+<div class="registration">
+    <form class="registration__form" action="{{ route('register') }}" method="POST">
+        @csrf
+        @if ($errors->any())
+            <div class="registration__error-message">
+                <ul class="registration__error-list">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div>
+            <label class="registration__label" for="name">Логин</label>
+            <input class="registration__input" type="text" id="name" name="name" value="{{ old('name') }}" required>
+        </div>
+
+        <div>
+            <label class="registration__label" for="email">Почта</label>
+            <input class="registration__input" type="email" id="email" name="email" value="{{ old('email') }}" required>
+        </div>
+
+        <div>
+            <label class="registration__label" for="password">Пароль</label>
+            <input class="registration__input" type="password" id="password" name="password" required>
+        </div>
+
+        <div>
+            <label class="registration__label" for="password_pass">Подтверждение пароля</label>
+            <input class="registration__input" type="password" id="password_confirmation" name="password_pass" required>
+        </div>
+
+        <button class="registration__button" type="submit">Зарегистрироваться</button>
+    </form>
+</div>
+@endsection

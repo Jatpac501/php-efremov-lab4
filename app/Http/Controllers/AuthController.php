@@ -24,7 +24,7 @@ class AuthController extends Controller
         $credentials = $request->only('name', 'password');
 
         if (Auth::attempt($credentials)) {
-            return redirect('/admin/dashboard');
+            return redirect('/');
         }
 
         return back()->withErrors(['message' => 'Неверные учетные данные']);
@@ -44,7 +44,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
         Auth::login($user);
-        return redirect('/admin/dashboard');
+        return redirect('/');
     }
 
     public function logout()

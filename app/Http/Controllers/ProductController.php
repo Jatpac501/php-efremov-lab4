@@ -66,7 +66,7 @@ class ProductController extends Controller
             $product->update(['gallery_images' => json_encode($galleryPaths)]);
         }
 
-        return redirect()->route('admin')->with('success', 'Товар дsобавлен!');
+        return redirect()->route('admin')->with('success', 'Товар добавлен!');
     }
 
     private function processImage($image)
@@ -78,7 +78,7 @@ class ProductController extends Controller
 
         $img->resize(960, 960, Image::Cover);
         $watermark = Image::fromFile(public_path('watermark.png'));
-        $img->place($watermark, 0, 0, 100); // Смещение на 10px, прозрачность 50%
+        $img->place($watermark, 0, 0, 100);
 
         $img->save($fullPath, 80);
 
@@ -89,7 +89,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('category');
+        $product->load(['category', 'comments.user', 'category.parent']);
         return view('products.show', compact('product'));
     }
 
@@ -99,8 +99,8 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        // $categories = Category::all();
-        // return view('admin.products.edit', compact('product', 'categories'));
+        $categories = Category::all();
+        return view('products.edit', compact('product', 'categories'));
     }
 
     /**
@@ -108,39 +108,33 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        // $request->validate([
-        //     'name' => 'required|string|max:255',
-        //     'description' => 'required',
-        //     'main_image' => 'image',
-        //     'gallery_images.*' => 'image',
-        //     'category_id' => 'required|exists:categories,id',
-        // ]);
-
-        // // Обновление основного изображения
-        // if ($request->hasFile('main_image')) {
-        //     Storage::disk('public')->delete($product->main_image);
-        //     $product->main_image = $request->file('main_image')->store('images', 'public');
-        // }
-
-        // // Обновление галереи
-        // if ($request->hasFile('gallery_images')) {
-        //     foreach (json_decode($product->gallery_images) as $oldImage) {
-        //         Storage::disk('public')->delete($oldImage);
-        //     }
-        //     $galleryImages = [];
-        //     foreach ($request->file('gallery_images') as $image) {
-        //         $galleryImages[] = $image->store('images', 'public');
-        //     }
-        //     $product->gallery_images = json_encode($galleryImages);
-        // }
-
-        // $product->update([
-        //     'name' => $request->name,
-        //     'description' => $request->description,
-        //     'category_id' => $request->category_id,
-        // ]);
-
-        // return redirect()->route('products.index')->with('success', 'Товар обновлен!');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required',
+            'price' => 'required|numeric',
+            'main_image' => 'nullable|image',
+            'gallery_images.*' => 'nullable|image',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+        $updateData = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'category_id' => $request->category_id,
+        ];
+        if ($request->hasFile('main_image')) {
+            $mainImagePath = $this->processImage($request->file('main_image'));
+            $updateData['main_image'] = $mainImagePath;
+        }
+        if ($request->hasFile('gallery_images')) {
+            $galleryPaths = [];
+            foreach ($request->file('gallery_images') as $image) {
+                $galleryPaths[] = $this->processImage($image);
+            }
+            $updateData['gallery_images'] = json_encode($galleryPaths);
+        }
+        $product->update($updateData);
+        return redirect()->route('admin')->with('success', 'Товар обновлен!');
     }
 
     /**
@@ -148,6 +142,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        $product->comments()->delete();
+
         Storage::disk('public')->delete($product->main_image);
         foreach (json_decode($product->gallery_images) as $image) {
             Storage::disk('public')->delete($image);

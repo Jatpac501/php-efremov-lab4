@@ -1,29 +1,32 @@
+@extends('layouts.app')
+
+@section('content')
 <style>
-    form {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        margin: 0 auto;
+    .product-form {
+        max-width: 960px;
+        margin: 20px auto;
         padding: 20px;
         border: 1px solid #ddd;
         border-radius: 5px;
         background-color: #f9f9f9;
     }
-    label {
+    .product-form__label {
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
     }
-    input, textarea {
+    .product-form__input,
+    .product-form__textarea,
+     .product-form__select {
         width: 100%;
         padding: 10px;
         margin-bottom: 10px;
         border: 1px solid #ddd;
         border-radius: 3px;
+         box-sizing: border-box;
+         resize: vertical;
     }
-    button {
+    .product-form__button {
         width: 100%;
         padding: 10px;
         background-color: #f44336;
@@ -32,39 +35,44 @@
         border-radius: 3px;
         cursor: pointer;
     }
+    .product-form__title {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 </style>
 
 
-<form action="{{ route('product.store') }}" method="POST" enctype="multipart/form-data">
+<form class="product-form" action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
-    <h1>Добавить товар</h1>
+    <h1 class="product-form__title">Добавить товар</h1>
     <div>
-        <label>Название</label>
-        <input type="text" name="name" required>
+        <label class="product-form__label">Название</label>
+        <input class="product-form__input" type="text" name="name" required>
     </div>
     <div>
-        <label>Описание</label>
-        <textarea name="description" required></textarea>
+        <label class="product-form__label">Описание</label>
+        <textarea class="product-form__textarea" name="description" required></textarea>
     </div>
     <div>
-        <label>Цена</label>
-        <input type="number" name="price" required>
+        <label class="product-form__label">Цена</label>
+        <input class="product-form__input" type="number" name="price" required>
     </div>
     <div>
-        <label>Основное изображение</label>
-        <input type="file" name="main_image" required>
+        <label class="product-form__label">Основное изображение</label>
+        <input class="product-form__input" type="file" name="main_image" required>
     </div>
     <div>
-        <label>Галерея изображений</label>
-        <input type="file" name="gallery_images[]" multiple>
+        <label class="product-form__label">Галерея изображений</label>
+        <input class="product-form__input" type="file" name="gallery_images[]" multiple>
     </div>
     <div>
-        <label>Категория</label>
-        <select name="category_id" required>
+        <label class="product-form__label">Категория</label>
+        <select class="product-form__select" name="category_id" required>
             @foreach($categories as $category)
                 <option value="{{ $category->id }}">{{ $category->name }}</option>
             @endforeach
         </select>
     </div>
-    <button type="submit">Добавить</button>
+    <button class="product-form__button" type="submit">Добавить</button>
 </form>
+@endsection
