@@ -28,5 +28,3 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
-
-
